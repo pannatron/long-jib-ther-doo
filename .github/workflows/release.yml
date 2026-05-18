@@ -42,7 +42,7 @@ jobs:
           cp SKILL.md "build/${SKILL_NAME}/"
           [ -f README.md ] && cp README.md "build/${SKILL_NAME}/" || true
           [ -f LICENSE ]   && cp LICENSE   "build/${SKILL_NAME}/" || true
-          for dir in bin src data; do
+          for dir in bin src data commands; do
             [ -d "$dir" ] && cp -r "$dir" "build/${SKILL_NAME}/"
           done
           cd build && zip -r "../${SKILL_NAME}.skill" "${SKILL_NAME}"

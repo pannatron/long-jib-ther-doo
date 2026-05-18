@@ -20,6 +20,7 @@
 - [ทำอะไรได้ / What it does](#ทำอะไรได้--what-it-does)
 - [Architecture (skill + software)](#architecture-skill--software)
 - [CLI tools](#cli-tools)
+- [Slash commands](#slash-commands)
 - [การติดตั้ง / Installation](#การติดตั้ง--installation)
   - [Claude.ai (Web)](#1-claudeai-promaxteamenterprise)
   - [Claude Code (CLI)](#2-claude-code-cli)
@@ -127,6 +128,34 @@ Her: ok" | ./bin/parse-chat
 
 ทั้งหมดเขียนด้วย **Python 3.10+ stdlib เท่านั้น** — ไม่ต้อง `pip install`
 อะไร รันได้ทุกเครื่องที่มี Python
+
+---
+
+## Slash commands
+
+นอกจาก skill ที่ trigger เองอัตโนมัติ ยังมี **slash commands ให้เรียกตรง**
+ใน Claude Code session (ติดตั้งอัตโนมัติพร้อม `install.sh`)
+
+| Command | ทำอะไร |
+|---|---|
+| `/jib-check "draft"` | เช็ค pushiness ของข้อความก่อนส่ง |
+| `/jib-signal` | อ่าน green/yellow/red zone จากแชต (paste มา หรือชี้ไฟล์ LINE export) |
+| `/jib-opener` | เทมเพลตประโยคเปิด เลือกตามบริบทการพบกัน |
+| `/jib-deep` | **Deep-dive 5 มิติ** — investment balance, engagement quality, momentum, action signals, trajectory + ให้ action เดียวที่ specific |
+
+**ตัวอย่าง:**
+```
+> /jib-check "ทำไมไม่ทักมาบ้าง"
+→ Claude: red zone (guilt-trip detected). ลองเวอร์ชันนี้แทน: ...
+
+> /jib-deep
+→ Claude: ขอ context ก่อน — เจอกันที่ไหน คุยมานานไหม สถานะตอนนี้?
+→ [user ตอบ]
+→ Claude: รัน parse-line + signal → วิเคราะห์ 5 มิติ → 1 action ที่ควรทำใน 72 ชม.
+```
+
+ต่างจากการคุยเปล่าๆ ตรงที่: slash command จะ **บังคับ flow** ให้ตรงจุด —
+`jib-deep` จะถามครบทุกมิติก่อนสรุป ไม่ขี้เกียจ ไม่ skip
 
 ---
 

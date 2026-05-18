@@ -72,11 +72,23 @@ if [ -d "$SKILL_DIR/bin" ]; then
     chmod +x "$SKILL_DIR/bin/"* 2>/dev/null || true
 fi
 
+CMD_INSTALLED=""
+if [ -d "$SKILL_DIR/commands" ]; then
+    mkdir -p "$HOME/.claude/commands"
+    cp -f "$SKILL_DIR/commands/"jib-*.md "$HOME/.claude/commands/" 2>/dev/null || true
+    CMD_INSTALLED="yes"
+fi
+
 ok "Installed at $SKILL_DIR"
+if [ -n "$CMD_INSTALLED" ]; then
+    ok "Slash commands installed to ~/.claude/commands/"
+fi
 echo ""
-echo "Test it:"
+echo "Test the CLI tool directly:"
 echo "  $SKILL_DIR/bin/analyze \"ทำไมไม่ทักมาบ้าง\""
 echo ""
-echo "Start a new Claude Code session and try:"
-echo "  ${c_dim}>${c_off} \"ช่วยดูข้อความที่ผมจะส่งหน่อย: ...\""
-echo "  ${c_dim}>${c_off} \"นี่แชตที่คุยกัน ช่วยอ่านสัญญาณให้หน่อย\""
+echo "In a new Claude Code session, try:"
+echo "  ${c_dim}>${c_off} /jib-check \"draft text here\""
+echo "  ${c_dim}>${c_off} /jib-deep"
+echo "  ${c_dim}>${c_off} /jib-opener"
+echo "  ${c_dim}>${c_off} ${c_dim}or just talk naturally — the skill auto-triggers${c_off}"

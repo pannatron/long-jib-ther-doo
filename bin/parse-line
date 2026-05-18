@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+"""CLI: parse a LINE chat export file and run signal analysis.
+
+Usage:
+    bin/parse-line --file [LINE]Chat.txt
+    cat [LINE]Chat.txt | bin/parse-line
+
+If LINE labels you as your real name instead of "Me", pass --your-name:
+    bin/parse-line --file chat.txt --your-name "Songkarn"
+
+Output: JSON with parsed stats + signal zone.
+"""
+import argparse
+import json
+import sys
+from dataclasses import asdict
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.line_parser import parse_line_export
+from src.signals import calculate
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(description="Parse LINE chat export and run signal analysis")
+    p.add_argument("--file", help="Path to LINE export .txt (default: stdin)")
+    p.add_argument("--your-name", help="Your display name in LINE (if not 'Me'/'เรา')")
+    p.add_argument("--their-name", help="The other person's display name (for disambiguation)")
+    args = p.parse_args()
+
+    if args.file:
+        raw = Path(args.file).read_text(encoding="utf-8")
+    else:
+        raw = sys.stdin.read()
+
+    if not raw.strip():
+        print("error: no LINE export provided", file=sys.stderr)
+        return 2
+
+    stats = parse_line_export(
+        raw,
+        your_name=args.your_name,
+        their_name=args.their_name,
+    )
+
+    if stats.your_msgs == 0 and stats.their_msgs == 0:
+        print(
+            "error: parsed 0 messages — check the file is a LINE export "
+            "and pass --your-name if your LINE name isn't 'Me'",
+            file=sys.stderr,
+        )
+        return 1
+
+    signal = calculate(stats)
+    output = {
+        "source": "line_export",
+        "stats": asdict(stats),
+        "signal": signal.to_dict(),
+    }
+    print(json.dumps(output, ensure_ascii=False, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

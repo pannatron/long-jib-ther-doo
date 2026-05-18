@@ -33,3 +33,5 @@ jobs:
             | python -m json.tool
           ./bin/opener --list | python -m json.tool
           ./bin/opener --category class_workshop | python -m json.tool
+          printf "2024/05/10 (Fri)\n10:00\tMe\thi\n10:05\tNong\they\n" \
+            | ./bin/parse-line | python -m json.tool

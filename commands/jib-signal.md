@@ -4,6 +4,11 @@ description: Read green/yellow/red signal zone from a conversation (long-jib-the
 
 The user wants to know what zone the conversation is in.
 
+**Language:** Reply in the language of the chat data itself. If you need to ask the user a clarifying question and you haven't seen any of their messages yet, ask in *both* languages so non-English speakers can answer comfortably:
+
+> "วางแชตที่อยากวิเคราะห์ หรือชี้ไฟล์ LINE export มาได้ครับ
+> Paste the chat you want analyzed, or point me to a LINE export file."
+
 **Figure out the input format from `$ARGUMENTS` and context:**
 
 1. **LINE export file path** (e.g. `/path/to/[LINE]Chat.txt`) — use parse-line:

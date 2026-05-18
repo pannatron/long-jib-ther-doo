@@ -4,6 +4,17 @@ description: Get opener message templates by context (long-jib-ther-doo)
 
 The user wants help opening a conversation with someone.
 
+**Step 0 — confirm language (only if not obvious from `$ARGUMENTS`):**
+
+If `$ARGUMENTS` includes a language hint or category id in a specific language, skip this. Otherwise ask in one line:
+
+```
+จะส่งข้อความเป็นภาษาอะไรครับ? (ไทย / English / Mix)
+What language will the message be in? (Thai / English / Mix)
+```
+
+Use the chosen language for the rest of the interaction, including the customized templates.
+
 **Step 1 — find the category:**
 
 If `$ARGUMENTS` matches a known category id, jump to step 2. Otherwise list categories:

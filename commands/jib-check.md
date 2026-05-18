@@ -5,8 +5,10 @@ description: Analyze a draft message for pushiness before sending (long-jib-ther
 The user wants to sanity-check a draft message before sending it.
 
 **Get the draft:**
-- If `$ARGUMENTS` contains the draft text, use it directly.
-- If empty, ask the user briefly: "ส่งข้อความที่จะร่างมาได้เลย" / "What's the draft?"
+- If `$ARGUMENTS` contains the draft text, use it directly — the language is whatever they wrote it in.
+- If empty, ask briefly in *both* languages so non-English speakers aren't shut out:
+  > "ส่งข้อความที่จะเช็คมาได้เลย / What draft do you want to check?"
+  Reply in whichever language they answer in.
 
 **Run the analyzer:**
 ```bash

@@ -4,7 +4,26 @@ description: Comprehensive 5-dimensional relationship deep-dive (long-jib-ther-d
 
 Run a thorough, multi-dimensional read on the user's situation — not just signal scoring.
 
-**Step 1 — gather context first (don't skip):**
+**Step 0 — confirm language first (don't skip this):**
+
+Before asking *any* coaching questions, ask the user which language to use for the whole session. This matters because `/jib-deep` is a long back-and-forth — switching language mid-session is jarring.
+
+If `$ARGUMENTS` includes a language hint (`th`, `ไทย`, `en`, `english`, `both`, `mix`), use it directly. Otherwise ask:
+
+```
+ก่อนเริ่ม — สะดวกคุยภาษาอะไรครับ?
+Before we start — what language do you want to use?
+
+1) ไทย — Thai only
+2) English — English only
+3) ผสม / Mix — สลับได้
+
+(ตอบ 1/2/3 หรือพิมพ์ภาษาที่จะใช้)
+```
+
+Lock the chosen language for the rest of the session. Any sample drafts you write must also be in that language (or the language the user would actually send — ask if unclear).
+
+**Step 1 — gather context (use the chosen language):**
 
 Ask short, targeted questions to get:
 - **Channel & history:** Where do they talk? How long have they been chatting?
@@ -13,6 +32,8 @@ Ask short, targeted questions to get:
 - **The user's wish:** What outcome would feel good — clarity? Closer? Define the relationship? Space?
 
 If the user already provided some of this in `$ARGUMENTS` or recent conversation, don't re-ask — fill the rest.
+
+Use short, targeted questions in the chosen language. Don't dump all questions at once — ask 1-2, get answers, ask follow-ups.
 
 **Step 2 — collect data:**
 

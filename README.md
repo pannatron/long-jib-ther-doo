@@ -20,7 +20,11 @@
 - [ทำอะไรได้ / What it does](#ทำอะไรได้--what-it-does)
 - [Architecture (skill + software)](#architecture-skill--software)
 - [CLI tools](#cli-tools)
-- [Slash commands](#slash-commands)
+- [ฟีเจอร์ Jib / Jib Features](#ฟีเจอร์-jib--jib-features)
+  - [`/jib-opener` — เริ่มต้นบทสนทนา](#-jib-opener--เริ่มต้นบทสนทนา--start-the-conversation)
+  - [`/jib-check` — เช็คข้อความก่อนส่ง](#-jib-check-draft--เช็คข้อความก่อนส่ง--sanity-check-before-sending)
+  - [`/jib-signal` — อ่านสัญญาณตอนนี้](#-jib-signal--อ่านสัญญาณตอนนี้--read-the-current-zone)
+  - [`/jib-deep` — วิเคราะห์ลึก 5 มิติ](#-jib-deep--วิเคราะห์ลึก-5-มิติ--deep-dive-5-dimensions)
 - [การติดตั้ง / Installation](#การติดตั้ง--installation)
   - [Claude.ai (Web)](#1-claudeai-promaxteamenterprise)
   - [Claude Code (CLI)](#2-claude-code-cli)
@@ -131,31 +135,154 @@ Her: ok" | ./bin/parse-chat
 
 ---
 
-## Slash commands
+## ฟีเจอร์ Jib / Jib Features
 
-นอกจาก skill ที่ trigger เองอัตโนมัติ ยังมี **slash commands ให้เรียกตรง**
-ใน Claude Code session (ติดตั้งอัตโนมัติพร้อม `install.sh`)
+ฟีเจอร์หลักของ skill นี้คือชุด **`/jib-*` slash commands** — เรียกตรงใน
+Claude Code session ได้เลย แต่ละตัวออกแบบมาให้ตอบคำถามคนละแบบในเส้นทาง
+"จีบ" ตั้งแต่ทักครั้งแรกจนถึงการอ่านสัญญาณระยะยาว
 
-| Command | ทำอะไร |
-|---|---|
-| `/jib-check "draft"` | เช็ค pushiness ของข้อความก่อนส่ง |
-| `/jib-signal` | อ่าน green/yellow/red zone จากแชต (paste มา หรือชี้ไฟล์ LINE export) |
-| `/jib-opener` | เทมเพลตประโยคเปิด เลือกตามบริบทการพบกัน |
-| `/jib-deep` | **Deep-dive 5 มิติ** — investment balance, engagement quality, momentum, action signals, trajectory + ให้ action เดียวที่ specific |
+Each `/jib-*` command answers a different question on the "jib" journey,
+from first message to long-term signal reading:
 
-**ตัวอย่าง:**
 ```
-> /jib-check "ทำไมไม่ทักมาบ้าง"
-→ Claude: red zone (guilt-trip detected). ลองเวอร์ชันนี้แทน: ...
-
-> /jib-deep
-→ Claude: ขอ context ก่อน — เจอกันที่ไหน คุยมานานไหม สถานะตอนนี้?
-→ [user ตอบ]
-→ Claude: รัน parse-line + signal → วิเคราะห์ 5 มิติ → 1 action ที่ควรทำใน 72 ชม.
+ทักครั้งแรก          ก่อนส่งทุกข้อความ      อยากรู้ว่าตอนนี้อยู่จุดไหน    อยากเข้าใจภาพรวม
+   ↓                       ↓                         ↓                       ↓
+/jib-opener   →    /jib-check        →      /jib-signal       →       /jib-deep
 ```
 
-ต่างจากการคุยเปล่าๆ ตรงที่: slash command จะ **บังคับ flow** ให้ตรงจุด —
-`jib-deep` จะถามครบทุกมิติก่อนสรุป ไม่ขี้เกียจ ไม่ skip
+---
+
+### 🎬 `/jib-opener` — เริ่มต้นบทสนทนา / Start the conversation
+
+**ใช้เมื่อ:** เพิ่งรู้จักกัน / แลก contact มาแล้วยังไม่ได้ทักครั้งแรก /
+ไม่รู้จะเปิดประโยคยังไงให้ไม่ดู generic
+
+**ทำอะไร:**
+- ถามว่าเจอกันบริบทไหน (คลาส, เพื่อนร่วมงาน, dating app, ฯลฯ)
+- ดึง template เปิดบทสนทนาจาก `data/openers.json` ตามบริบทนั้น
+- **ไม่ยอมให้ copy ไปใช้ตรงๆ** — บังคับให้คุณกรอก "รายละเอียดจริง" ที่
+  สังเกตเห็น/คุยกันมาก่อน เพราะ opener ที่ generic ("หวัดดีครับ") จะ
+  ผลักภาระให้อีกฝ่ายเริ่มเรื่องเอง
+- โชว์ 2-3 แนวที่ intent ต่างกัน (เกริ่นเบาๆ vs ชวนไปด้วยกัน vs ถามต่อยอด)
+
+**ตัวอย่าง output:**
+```
+> /jib-opener
+→ เจอกันบริบทไหนครับ? (class_workshop / mutual_friend / dating_app / ...)
+> เจอที่คลาสโยคะ
+→ ตอนคลาสได้คุยอะไรกันบ้าง หรือมีจังหวะอะไรร่วมกันรึเปล่า?
+> เห็นเขาช่วยเอาบล็อกโยคะมาให้ตอนผมหายืม
+→ แนะนำ 3 เวอร์ชัน:
+   1) ต่อยอดจากเหตุการณ์: "ขอบคุณเรื่องบล็อกอีกรอบนะ..."
+   2) ชวนไปด้วยกัน: "ครั้งหน้าจะไปไหม จะได้ไปเป็นเพื่อน"
+   3) ถามแบบเปิด: "ปกติเรียนกี่คลาสต่อสัปดาห์เลย"
+```
+
+---
+
+### ✏️ `/jib-check "draft"` — เช็คข้อความก่อนส่ง / Sanity-check before sending
+
+**ใช้เมื่อ:** ร่างข้อความไว้แล้วแต่ไม่แน่ใจว่า "เกินไป" ไหม / กลัวฟังดู
+ตื๊อ ตัดพ้อ หรือ guilt-trip โดยไม่ตั้งใจ
+
+**ทำอะไร:**
+- รัน `bin/analyze` ผ่าน rule patterns ใน `data/rules.json`
+- ให้คะแนน **pushiness 0.0–1.0** + verdict (🟢 green / 🟡 yellow / 🔴 red)
+- ระบุ pattern ที่ตรวจเจอ เช่น `guilt_trip`, `repeated_ask`, `monitoring`
+- **ถ้า yellow/red จะเขียนเวอร์ชันใหม่ให้** — เก็บเจตนาเดิมไว้ แต่ตัด
+  ส่วนที่บีบให้อีกฝ่ายต้องอธิบาย/รู้สึกผิด
+
+**ตัวอย่าง output:**
+```
+> /jib-check "ทำไมไม่ทักมาบ้าง คิดถึงนะ"
+→ 🔴 red zone (pushiness 0.85)
+   เจอ guilt-trip pattern — "ทำไมไม่..." วางภาระให้เขาต้องอธิบาย/ขอโทษ
+   แทนที่จะรู้สึกถูกคิดถึง
+→ เวอร์ชันใหม่:
+   "วันนี้เจอ [สิ่งที่ทำให้นึกถึงเขา] เลยนึกถึงเลย เป็นไงบ้างช่วงนี้"
+   ต่างตรง: ให้ของขวัญเล็กๆ โดยไม่บังคับให้เขาตอบ
+```
+
+---
+
+### 🚦 `/jib-signal` — อ่านสัญญาณตอนนี้ / Read the current zone
+
+**ใช้เมื่อ:** คุยกันมาสักพักแล้ว / สงสัยว่าอีกฝ่ายยังสนใจอยู่ไหม /
+อยากได้ภาพรวมแบบ objective ก่อนตัดสินใจ "จะรุก/ถอย/ให้พื้นที่"
+
+**ทำอะไร:**
+- รับ input ได้ 3 แบบ:
+  1. **ไฟล์ LINE export** (`.txt`) → รัน `bin/parse-line` (มี timestamp =
+     คำนวณ reply time แม่น)
+  2. **Paste แชตสั้นๆ** (`Me: ... / Her: ...`) → รัน `bin/parse-chat`
+  3. **บอกด้วยปาก** ("เขาตอบช้า 4 ชม. ผมส่งเยอะกว่า 2 เท่า") → แปลง
+     เป็น flag ส่งเข้า `bin/signal`
+- คำนวณ **signal zone (🟢🟡🔴)** จาก 5 ปัจจัยที่ถ่วงน้ำหนัก: message
+  ratio, reply time, length ratio, questions back, initiation balance
+- **ระบุ contradictions** — ถ้าตัวเลขขัดกัน (เช่น "เขาเริ่มทักบ่อย แต่
+  ความยาวข้อความลดลง") จะ flag ให้ ไม่ดูแค่ score
+- เตือน calibration: ถ้าเป็นความสัมพันธ์ที่ established แล้ว
+  (1000+ ข้อความ, ออกเดทแล้ว) จะบอกว่าเครื่องคิดเลขนี้ไม่ได้ออกแบบมา
+  สำหรับเคสนั้น
+
+**ตัวอย่าง output:**
+```
+> /jib-signal
+→ paste แชต / ชี้ไฟล์ LINE export มาได้เลย
+> [user แปะ LINE export]
+→ 🟡 yellow zone (score 0.42)
+   ปัจจัยที่สำคัญที่สุด 3 อย่าง:
+   • reply time ของเขาช้าลงจาก 15 นาที → 4 ชั่วโมง (น้ำหนักลบ)
+   • คุณส่งยาวเฉลี่ย 80 ตัวอักษร เขาส่ง 25 (ratio 3.2 — มากไป)
+   • แต่เขายังถามกลับเฉลี่ย 1 คำถาม/วัน (น้ำหนักบวก เล็กน้อย)
+→ action: hold steady — ลดความถี่ลง ปล่อยให้เขาเป็นคนเริ่มทัก 1 ครั้ง
+   เพื่อ recalibrate ว่าฝ่ายไหนกำลัง "ลงทุน" มากกว่ากัน
+```
+
+---
+
+### 🔬 `/jib-deep` — วิเคราะห์ลึก 5 มิติ / Deep-dive (5 dimensions)
+
+**ใช้เมื่อ:** กังวลกับสถานการณ์ใดสถานการณ์หนึ่งจริงจัง / `/jib-signal`
+ให้ภาพไม่พอ / อยากได้ "1 action ที่ควรทำใน 72 ชม." ไม่ใช่ "ลองดูหลายๆ ทาง"
+
+**ทำอะไร:**
+- เริ่มด้วยการ **ล็อคภาษา** ก่อน (ไทย/English/Mix) เพราะเซสชันยาว
+- ถามบริบท: คุยกันมานานแค่ไหน, สถานะตอนนี้, ทำไมถึงถามตอนนี้, อยากได้
+  outcome แบบไหน
+- รัน `parse-line` / `parse-chat` / `analyze` ตามข้อมูลที่มี
+- วิเคราะห์ครบ **5 มิติ**:
+
+  | # | มิติ | มองอะไร |
+  |---|---|---|
+  | 1 | **Investment balance** | ใครส่งมากกว่า ใครถามมากกว่า ใครเริ่มทัก |
+  | 2 | **Engagement quality** | reply speed, ความยาว, ความลึก, จำเรื่องเก่าได้ไหม |
+  | 3 | **Momentum direction** | เทียบกับ 2-3 สัปดาห์ก่อน — ดีขึ้น/นิ่ง/แย่ลง |
+  | 4 | **Action signals** | โอกาส (เขาเริ่ม, ถามกลับ, ชวน) vs สัญญาณเตือน (short streak, deflect) |
+  | 5 | **Trajectory** | ถ้าไม่เปลี่ยนอะไร เรื่องนี้จะไปทางไหน |
+
+- **Synthesize อย่างซื่อสัตย์** — ชี้ contradictions, ระบุ "bottleneck
+  จริง" (ความสนใจของเขา? กลยุทธ์ของคุณ? ไม่ escalate? บริบทภายนอก?)
+- จบด้วย **1 action เดียว** ที่ specific พอจะลงมือทำได้พรุ่งนี้ + อธิบาย
+  ว่าทำไมเลือกอันนี้ + บอกว่าจะดูสัญญาณอะไรหลังทำ
+
+**ต่างจาก `/jib-signal` ตรงไหน:**
+- `/jib-signal` = อ่าน metric ปัจจุบัน (snapshot)
+- `/jib-deep` = อ่าน metric + บริบทเชิงคุณภาพ + เทรนด์ + คำตอบเชิงกลยุทธ์
+  ที่เฉพาะกับสถานการณ์คุณ
+
+---
+
+### ทำไมต้องเป็น slash command ไม่ใช่คุยเปล่าๆ?
+
+Slash commands **บังคับ flow** ให้ตรงจุด — `/jib-deep` จะถามครบทุกมิติ
+ก่อนสรุป ไม่ skip; `/jib-check` จะรัน analyzer จริงเสมอ ไม่ได้แค่เดาด้วย
+intuition ของ LLM อย่างเดียว ผลคือ output ทำซ้ำได้และตรงประเด็นกว่าการ
+เปิด chat ลอยๆ
+
+Slash commands **enforce a flow** — `/jib-deep` won't skip dimensions,
+`/jib-check` always runs the actual analyzer instead of LLM-guessing.
+Output is more reproducible and on-point than free-form chat.
 
 ---
 

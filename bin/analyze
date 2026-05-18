@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+"""CLI: analyze a draft message for pushiness.
+
+Usage:
+    bin/analyze "ทำไมไม่ทักมาบ้าง"
+    echo "your draft" | bin/analyze
+
+Output: JSON with pushiness score, verdict (green/yellow/red), and flagged phrases.
+"""
+import argparse
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.analyzer import analyze
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(description="Analyze draft message for pushiness")
+    p.add_argument("draft", nargs="?", help="Draft text (or pipe via stdin)")
+    args = p.parse_args()
+
+    draft = args.draft if args.draft else sys.stdin.read().strip()
+    if not draft:
+        print("error: no draft provided", file=sys.stderr)
+        return 2
+
+    result = analyze(draft)
+    print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

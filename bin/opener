@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+"""CLI: suggest opener templates by category.
+
+Usage:
+    bin/opener --list
+    bin/opener --category class_workshop
+    bin/opener --category dating_app
+
+Output: JSON with templates (intent, Thai + English variants) plus warnings.
+"""
+import argparse
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.openers import suggest, list_categories
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(description="Suggest opener templates")
+    g = p.add_mutually_exclusive_group(required=True)
+    g.add_argument("--list", action="store_true", help="List available categories")
+    g.add_argument("--category", help="Category id (use --list to see options)")
+    args = p.parse_args()
+
+    if args.list:
+        print(json.dumps(list_categories(), ensure_ascii=False, indent=2))
+        return 0
+
+    try:
+        result = suggest(args.category)
+    except KeyError:
+        print(f"error: unknown category '{args.category}' (use --list)", file=sys.stderr)
+        return 1
+
+    print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

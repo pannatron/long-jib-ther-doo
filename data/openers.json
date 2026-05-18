@@ -1,0 +1,101 @@
+{
+  "_doc": "Opener templates organized by how you met. Each template uses {context} placeholder for the specific shared detail the user supplies. Templates come in 2-3 variants per category, optimized for different intents.",
+  "categories": {
+    "class_workshop": {
+      "label_th": "เจอกันในคลาส/เวิร์กช็อป (โยคะ ภาษา ทำอาหาร ฯลฯ)",
+      "label_en": "Met in a class or workshop",
+      "templates": [
+        {
+          "intent": "low_pressure_followup",
+          "th": "เมื่อกี้คลาส {context} สนุกอยู่นะ ตอนนั้นยังไม่ได้ทักเลย ทักไว้ก่อนกลัวลืม 😄",
+          "en": "Hey — that {context} class was actually fun. Didn't get a chance to say hi properly, so figured I'd text before I forgot."
+        },
+        {
+          "intent": "shared_curiosity",
+          "th": "เห็นทำ {context} ได้ดีมาก เริ่มเรียนมานานยังครับ/คะ?",
+          "en": "You looked like you actually knew what you were doing with {context} — have you been doing it long?"
+        },
+        {
+          "intent": "next_session_invite",
+          "th": "สัปดาห์หน้าจะไปคลาสเดิมไหม ถ้าไปบอกด้วย จะได้ไปด้วยกัน",
+          "en": "Are you going to next week's class? If yes, I'll plan around it."
+        }
+      ]
+    },
+    "mutual_friend": {
+      "label_th": "เจอผ่านเพื่อนร่วม/งานเลี้ยง",
+      "label_en": "Met through mutual friends or at a party",
+      "templates": [
+        {
+          "intent": "callback_specific",
+          "th": "เมื่อคืนที่ {context} ขำตอนที่... [อ้างเรื่องที่คุยกันจริง]",
+          "en": "Still thinking about {context} from last night — [reference something you actually talked about]"
+        },
+        {
+          "intent": "low_pressure",
+          "th": "เห็น {mutual_friend} แชร์รูปเมื่อคืน ขอบคุณนะที่ทำให้คืนนั้นไม่เก้อ 😄",
+          "en": "{mutual_friend} just posted photos from last night — was good meeting you, thanks for keeping the conversation alive."
+        }
+      ]
+    },
+    "dating_app": {
+      "label_th": "Match จากแอป",
+      "label_en": "Matched on a dating app",
+      "templates": [
+        {
+          "intent": "specific_profile_detail",
+          "th": "เห็นในโปรไฟล์ว่า {context} — เรื่องนี้สนใจมานานเลย เริ่มยังไงเหรอ?",
+          "en": "Your profile mentions {context} — that's something I've been curious about. How did you get into it?"
+        },
+        {
+          "intent": "playful_callback",
+          "th": "ถ้าให้เดาจากรูป {context} น่าจะเป็นคนชอบ... [เดาเล่นๆ]",
+          "en": "Going to guess from your {context} photo that you're the kind of person who... [light playful guess]"
+        }
+      ]
+    },
+    "workplace_adjacent": {
+      "label_th": "เจอกันในที่ทำงานหรือคนรู้จักงาน",
+      "label_en": "Coworker or work-adjacent",
+      "templates": [
+        {
+          "intent": "professional_safe",
+          "th": "เรื่อง {context} ที่คุยไว้วันก่อน อยากถามต่อนิดนึง — สะดวกแชตคุยไหม?",
+          "en": "About {context} we discussed earlier — wanted to ask a follow-up. Free to chat over text?"
+        }
+      ],
+      "warning_th": "ทักเรื่องงานก่อนสักพัก เคารพ boundary ของที่ทำงานเป็นสำคัญ",
+      "warning_en": "Keep it work-anchored at first. Workplace boundaries deserve respect."
+    },
+    "online_community": {
+      "label_th": "เจอใน community ออนไลน์ (Discord, Twitter, เกม)",
+      "label_en": "Online community",
+      "templates": [
+        {
+          "intent": "shared_interest_deepdive",
+          "th": "เห็นโพสต์เรื่อง {context} วันก่อน ถามได้ป่ะว่า... [คำถามที่ไม่ใช่ google ได้]",
+          "en": "Saw your post about {context} the other day — wanted to ask [a question that's not just googleable]"
+        }
+      ]
+    },
+    "gym_yoga_studio": {
+      "label_th": "เจอกันที่ฟิตเนส/โยคะ/สตูดิโอ",
+      "label_en": "Gym, yoga, or studio",
+      "templates": [
+        {
+          "intent": "respect_space",
+          "th": "หวัดดีครับ/ค่ะ — เห็นกันบ่อยที่ {context} เลยอยากทักไว้ ถ้าไม่สะดวกตอบไม่เป็นไรนะ",
+          "en": "Hey — we keep crossing paths at {context}, figured I'd say hi. No pressure to reply if you'd rather not."
+        }
+      ],
+      "warning_th": "พื้นที่ออกกำลังกายเป็น space ที่หลายคนอยากอยู่คนเดียว ทักครั้งเดียวพอ ไม่ได้ตอบคือคำตอบ",
+      "warning_en": "Workout spaces are deliberately private for many people. Text once. No reply IS the reply."
+    }
+  },
+  "universal_dont": [
+    "ทักแค่ว่า 'หวัดดีครับ' / 'hi' ลอยๆ — บังคับให้อีกฝ่ายแบกภาระเริ่มบทสนทนา",
+    "ทักทุกวันถ้ายังไม่มีคำตอบ — กลายเป็นตื๊อ",
+    "ส่งรูปตัวเองก่อนได้รับการขอ — ผิด consent โดยอัตโนมัติ",
+    "ใช้คำเรียกใกล้ชิด (ที่รัก/babe) ก่อนตกลงกัน"
+  ]
+}

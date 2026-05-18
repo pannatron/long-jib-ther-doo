@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""CLI: calculate signal zone from chat stats.
+
+Usage:
+    bin/signal --your-msgs 10 --their-msgs 8 \\
+               --your-avg-len 80 --their-avg-len 25 \\
+               --your-questions 4 --their-questions 1 \\
+               --reply-minutes 240 --initiations 0 --short-streak 3
+
+Output: JSON with zone (green/yellow/red), score, per-factor breakdown.
+"""
+import argparse
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.signals import ChatStats, calculate
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(description="Calculate signal zone from chat stats")
+    p.add_argument("--your-msgs", type=int, required=True)
+    p.add_argument("--their-msgs", type=int, required=True)
+    p.add_argument("--your-avg-len", type=float, required=True)
+    p.add_argument("--their-avg-len", type=float, required=True)
+    p.add_argument("--your-questions", type=int, required=True)
+    p.add_argument("--their-questions", type=int, required=True)
+    p.add_argument("--reply-minutes", type=float, required=True,
+                   help="Average minutes they take to reply")
+    p.add_argument("--initiations", type=int, default=0,
+                   help="Times they initiated a conversation")
+    p.add_argument("--short-streak", type=int, default=0,
+                   help="Current consecutive short replies from them")
+    args = p.parse_args()
+
+    stats = ChatStats(
+        your_msgs=args.your_msgs,
+        their_msgs=args.their_msgs,
+        your_avg_len=args.your_avg_len,
+        their_avg_len=args.their_avg_len,
+        your_questions=args.your_questions,
+        their_questions=args.their_questions,
+        their_avg_reply_minutes=args.reply_minutes,
+        their_initiations=args.initiations,
+        consecutive_short_replies=args.short_streak,
+    )
+    result = calculate(stats)
+    print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

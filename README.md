@@ -9,6 +9,8 @@
 
 [![Skill](https://img.shields.io/badge/Claude-Agent%20Skill-blueviolet)]()
 [![Language](https://img.shields.io/badge/lang-TH%20%7C%20EN-green)]()
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)]()
+[![Tests](https://github.com/pannatron/long-jib-ther-doo/actions/workflows/test.yml/badge.svg)](https://github.com/pannatron/long-jib-ther-doo/actions/workflows/test.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 
 ---
@@ -16,6 +18,8 @@
 ## สารบัญ / Table of Contents
 
 - [ทำอะไรได้ / What it does](#ทำอะไรได้--what-it-does)
+- [Architecture (skill + software)](#architecture-skill--software)
+- [CLI tools](#cli-tools)
 - [การติดตั้ง / Installation](#การติดตั้ง--installation)
   - [Claude.ai (Web)](#1-claudeai-promaxteamenterprise)
   - [Claude Code (CLI)](#2-claude-code-cli)
@@ -46,6 +50,77 @@ for you or spam templated texts. Instead it helps you:
 
 ---
 
+## Architecture (skill + software)
+
+ต่างจาก skill ทั่วไปที่เป็น markdown ล้วน — `long-jib-ther-doo` แพ็ค
+**ซอฟต์แวร์ Python จริงๆ** ไว้ใน skill เพื่อให้ส่วนที่ **"วัดได้"**
+เป็น objective ไม่ต้องพึ่ง intuition ของ Claude อย่างเดียว
+
+```
+long-jib-ther-doo/
+├── SKILL.md              ← บอก Claude ว่าเมื่อไหร่ควรเรียก tool ไหน
+├── bin/                  ← CLI tools (executable Python scripts)
+│   ├── analyze           วิเคราะห์ pushiness ของข้อความ
+│   ├── signal            คำนวณ green/yellow/red zone
+│   ├── parse-chat        parse แชตที่ paste มา → ออกมาเป็น stats
+│   └── opener            เทมเพลตประโยคเปิดตาม category
+├── src/                  ← logic modules
+│   ├── analyzer.py       pushiness scoring จาก rule patterns
+│   ├── signals.py        weighted scoring สำหรับ signal zone
+│   ├── parser.py         parse chat formats (Me:/Her:/เรา:/เขา:)
+│   └── openers.py        opener library lookup
+├── data/                 ← rule library (JSON — แก้ได้ ไม่ต้องแตะโค้ด)
+│   ├── rules.json        patterns ของ pushy/guilt-trip phrases
+│   └── openers.json      opener templates จัดตามบริบทการพบกัน
+└── tests/                ← 23 unit tests (run: python -m unittest discover tests)
+```
+
+**ทำไมต้องเป็นซอฟต์แวร์ ไม่ใช่ markdown อย่างเดียว?**
+
+| สิ่งที่ Claude ทำได้ดี | สิ่งที่โค้ดทำได้ดีกว่า |
+|---|---|
+| ตีความสถานการณ์ที่ซับซ้อน | ให้คะแนน objective ที่ทำซ้ำได้ |
+| ปรับโทนตามบุคลิกผู้ใช้ | detect pattern เฉพาะที่ตรวจซ้ำๆ |
+| แนะนำเชิงกลยุทธ์ | นับ stats จาก raw chat |
+| อธิบาย "ทำไม" ให้ผู้ใช้เข้าใจ | unit test ได้ — รู้ว่าผลตรงเดิม |
+
+ผลคือ Claude ใช้ tools เป็น "เครื่องมือเสริมความเห็น" — เหมือนหมอใช้
+blood test ก่อนวินิจฉัย ไม่ใช่ทดแทนการคุยกับคนไข้
+
+---
+
+## CLI tools
+
+ทดสอบจากเครื่องตัวเองได้เลย ไม่ต้องผ่าน Claude:
+
+```bash
+# 1) วิเคราะห์ข้อความก่อนส่ง
+./bin/analyze "ทำไมไม่ทักมาบ้าง"
+# → { "pushiness": 0.9, "verdict": "red", "flags": [{"category": "guilt_trip", ...}] }
+
+# 2) คำนวณ signal zone จากข้อมูลแชต
+./bin/signal --your-msgs 10 --their-msgs 8 \
+  --your-avg-len 80 --their-avg-len 25 \
+  --your-questions 4 --their-questions 1 \
+  --reply-minutes 240 --initiations 0 --short-streak 3
+# → { "zone": "yellow", "score": 0.42, "factors": {...}, "recommendation": "..." }
+
+# 3) parse แชตที่ paste มา → ออกมาเป็น signal report
+echo "Me: hi
+Her: hey
+Me: how was your day?
+Her: ok" | ./bin/parse-chat
+
+# 4) ดูเทมเพลตประโยคเปิดตามบริบทที่พบกัน
+./bin/opener --list
+./bin/opener --category class_workshop
+```
+
+ทั้งหมดเขียนด้วย **Python 3.10+ stdlib เท่านั้น** — ไม่ต้อง `pip install`
+อะไร รันได้ทุกเครื่องที่มี Python
+
+---
+
 ## การติดตั้ง / Installation
 
 > ⚠️ Skill คือ **ชุดคำสั่งที่ Claude ทำตาม** ควรเปิดอ่าน [`SKILL.md`](SKILL.md)
@@ -56,13 +131,13 @@ for you or spam templated texts. Instead it helps you:
 
 ### 1) Claude.ai (Pro/Max/Team/Enterprise)
 
-1. ดาวน์โหลดไฟล์ [`long-jib-ther-doo.skill`](long-jib-ther-doo.skill)
+1. ดาวน์โหลด `.skill` ล่าสุดจาก [**Releases page**](https://github.com/pannatron/long-jib-ther-doo/releases/latest)
 2. ไปที่ **Settings → Capabilities → Skills**
 3. กด **Upload skill** แล้วเลือกไฟล์ที่ดาวน์โหลด
 4. เปิดใช้งาน — เริ่มคุยกับ Claude ได้เลย
 
 ```
-Download .skill file → Settings → Capabilities → Skills → Upload skill
+Releases → long-jib-ther-doo.skill → Settings → Capabilities → Skills → Upload
 ```
 
 ### 2) Claude Code (CLI)
@@ -77,13 +152,12 @@ git clone https://github.com/pannatron/long-jib-ther-doo.git ~/.claude/skills/lo
 claude
 ```
 
-**วิธี B — แตกไฟล์ .skill เอง:**
+**วิธี B — ดาวน์โหลด .skill จาก Releases:**
 
 ```bash
-mkdir -p ~/.claude/skills/long-jib-ther-doo
 curl -L -o /tmp/long-jib.skill \
-  https://github.com/pannatron/long-jib-ther-doo/raw/main/long-jib-ther-doo.skill
-unzip /tmp/long-jib.skill -d ~/.claude/skills/long-jib-ther-doo
+  https://github.com/pannatron/long-jib-ther-doo/releases/latest/download/long-jib-ther-doo.skill
+unzip /tmp/long-jib.skill -d ~/.claude/skills/
 ```
 
 **วิธี C — Plugin marketplace:**
@@ -215,8 +289,25 @@ the skill safe to share publicly.
 ```bash
 git clone https://github.com/pannatron/long-jib-ther-doo.git
 cd long-jib-ther-doo
-# แก้ SKILL.md แล้ว rebuild .skill file:
-zip -r long-jib-ther-doo.skill SKILL.md
+# แก้ SKILL.md ได้เลย — ไม่ต้อง build .skill เอง
+# CI จะ build และ publish ให้อัตโนมัติเมื่อ tag release
+```
+
+**Development:**
+```bash
+# Run tests
+python3 -m unittest discover tests -v
+
+# Try CLI tools locally
+./bin/analyze "draft text"
+./bin/opener --list
+```
+
+**Release process (สำหรับ maintainer):**
+```bash
+git tag v1.0.0
+git push --tags
+# → GitHub Actions จะ build .skill (รวม bin/, src/, data/) และสร้าง Release ให้อัตโนมัติ
 ```
 
 **Roadmap ideas:**

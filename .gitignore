@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build artifacts — .skill files are built by CI on release
+# (download from GitHub Releases instead of committing binaries)
+*.skill
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Local development
+node_modules/
+.env
+.env.local

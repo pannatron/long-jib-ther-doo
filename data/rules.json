@@ -1,0 +1,108 @@
+{
+  "_doc": "Pushiness detection rules. Each rule has patterns (regex), weight (0-1), category, and explanation. Patterns are case-insensitive. Tested against both Thai and English drafts.",
+  "rules": [
+    {
+      "id": "guilt_trip_silence",
+      "patterns": [
+        "ทำไม(ไม่|ยัง?ไม่)(ตอบ|ทัก|พิมพ์)",
+        "ไม่เห็น(ตอบ|ทัก)เลย",
+        "เงียบ(ทำไม|ไปไหน)",
+        "why (aren'?t|don'?t) you (reply|answer|text)",
+        "you never (text|reply|answer)",
+        "are you (ignoring|ghosting) me"
+      ],
+      "weight": 0.9,
+      "category": "guilt_trip",
+      "explanation": "ใส่ความรู้สึกผิดให้อีกฝ่ายว่าทำผิดที่ไม่ตอบ — บีบให้ต้องอธิบาย/ขอโทษ"
+    },
+    {
+      "id": "passive_aggressive_miss",
+      "patterns": [
+        "คิดถึงจัง.*(ทำไม|ไม่เห็น)",
+        "(ไม่|ไม่ค่อย)(คิดถึง|สนใจ)(เรา|ฉัน|ผม|กู|เค้า)บ้างเหรอ",
+        "miss me at all\\?",
+        "guess you (don'?t|forgot)"
+      ],
+      "weight": 0.85,
+      "category": "passive_aggressive",
+      "explanation": "ผสมการแสดงความคิดถึงกับการตัดพ้อ — อ่านแล้วอึดอัด ไม่อบอุ่น"
+    },
+    {
+      "id": "demanding_reply",
+      "patterns": [
+        "ตอบ(หน่อย|ที|ด่วน|มาเร็ว)",
+        "อย่า(เงียบ|หาย)",
+        "(ต้อง|ขอ)ให้ตอบ",
+        "answer me",
+        "reply (now|asap|please)",
+        "respond when you see this"
+      ],
+      "weight": 0.8,
+      "category": "demanding",
+      "explanation": "เรียกร้องการตอบกลับ — สื่อว่าเวลาของเราสำคัญกว่าเขา"
+    },
+    {
+      "id": "desperation_punctuation",
+      "patterns": [
+        "\\?{3,}",
+        "[!]{4,}",
+        "(ฮัลโหล|hello)+\\?+",
+        "(อยู่|there)\\?{2,}"
+      ],
+      "weight": 0.6,
+      "category": "desperation",
+      "explanation": "เครื่องหมายซ้ำๆ สื่อความกระวนกระวาย — ลดให้เหลือ ? เดียวก็พอ"
+    },
+    {
+      "id": "overlove_early",
+      "patterns": [
+        "รัก(เลย|มาก|จัง)",
+        "เป็น(แฟน|เมีย|ผัว)กัน",
+        "i love you",
+        "(you'?re|ur) (the one|my everything)",
+        "soulmate"
+      ],
+      "weight": 0.75,
+      "category": "intensity_mismatch",
+      "explanation": "ระดับความรู้สึกแรงเกินจังหวะ — มักทำให้อีกฝ่ายตกใจถอย"
+    },
+    {
+      "id": "self_pity",
+      "patterns": [
+        "(เหงา|เศร้า|เสียใจ).*(ไม่มีใคร|คนเดียว)",
+        "no one (cares|wants me)",
+        "(i'?m|im) so lonely"
+      ],
+      "weight": 0.7,
+      "category": "self_pity",
+      "explanation": "ขอความเห็นใจเป็นเครื่องมือเรียกร้องความสนใจ — สร้างภาระทางอารมณ์"
+    },
+    {
+      "id": "excessive_endearment",
+      "patterns": [
+        "(ที่รัก|babe|baby|honey|sweetheart)",
+        "(จุ๊บๆ|chu+p)",
+        "<3{2,}"
+      ],
+      "weight": 0.5,
+      "category": "premature_intimacy",
+      "explanation": "คำหวานเกินจังหวะความสัมพันธ์ — เช็คว่าตกลงเรียกแบบนี้ระหว่างกันรึยัง"
+    },
+    {
+      "id": "tracking_pressure",
+      "patterns": [
+        "(อยู่|ทำอะไร)กับใคร",
+        "ไปไหนมา(ทำไม|ถึง|มา)ไม่บอก",
+        "who are you with",
+        "where (were|are) you"
+      ],
+      "weight": 0.85,
+      "category": "surveillance",
+      "explanation": "คำถามแบบสอบสวน — ทำให้อีกฝ่ายรู้สึกถูกจับตา"
+    }
+  ],
+  "length_thresholds": {
+    "opener_max_chars": 200,
+    "opener_warning": "ข้อความเปิดยาวเกินไป — เสี่ยงดูพยายามเกินจังหวะ ลดเหลือ 1-2 ประโยคพอ"
+  }
+}

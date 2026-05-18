@@ -51,6 +51,62 @@ description: >-
 จะส่งจริง (ถามได้ถ้าไม่ชัด) คำแนะนำเรื่องการอ่านสัญญาณและจังหวะใช้ได้
 เหมือนกันทั้งสองภาษา ปรับแค่ตัวอย่างถ้อยคำให้เป็นธรรมชาติในภาษานั้นๆ
 
+## เครื่องมือที่มี (CLI tools)
+
+Skill นี้มี CLI tools ใน `bin/` ที่ช่วยให้การประเมินเป็น objective มากขึ้น
+เรียกผ่าน Bash เมื่อสถานการณ์ตรงกับเงื่อนไขด้านล่าง อ่าน JSON output แล้ว
+แปลให้ผู้ใช้ฟังด้วยภาษาธรรมชาติ (ไม่ใช่โชว์ JSON ดิบ)
+
+### `bin/analyze "<draft>"` — วิเคราะห์ข้อความก่อนส่ง
+**ใช้เมื่อ:** ผู้ใช้ขอเช็คข้อความที่ร่างไว้ ("พิมพ์แบบนี้โอเคไหม", "ส่งได้รึยัง")
+**Output:** `{ pushiness, verdict: green|yellow|red, flags: [...], length_warning }`
+**วิธีใช้:** ดู verdict, อธิบาย flags ที่เจอ (category + explanation),
+เสนอเวอร์ชันใหม่ที่หลีกเลี่ยง pattern ที่ถูก flag
+
+```bash
+./bin/analyze "ทำไมไม่ทักมาบ้าง"
+```
+
+### `bin/signal <stats>` — คำนวณ signal zone จากข้อมูลแชต
+**ใช้เมื่อ:** ผู้ใช้บอกข้อมูลคร่าวๆ ของบทสนทนา (จำนวนข้อความ, เวลาตอบ ฯลฯ)
+**Output:** `{ zone: green|yellow|red, score, factors, recommendation }`
+**วิธีใช้:** อธิบาย zone ให้ผู้ใช้ฟัง พร้อม factors ที่ทำให้ขึ้นหรือลง
+
+```bash
+./bin/signal --your-msgs 10 --their-msgs 8 \
+  --your-avg-len 80 --their-avg-len 25 \
+  --your-questions 4 --their-questions 1 \
+  --reply-minutes 240 --initiations 0 --short-streak 3
+```
+
+### `bin/parse-chat` — parse แชตที่ paste มาแล้ววิเคราะห์
+**ใช้เมื่อ:** ผู้ใช้ paste บทสนทนาทั้งก้อนเข้ามา
+**Format ที่รับ:** บรรทัดละข้อความ ขึ้นต้นด้วยชื่อ (Me:, Her:, เรา:, เขา:)
+**Output:** parsed stats + signal zone
+
+```bash
+echo "Me: hi
+Her: hey
+Me: how was your day?
+Her: ok" | ./bin/parse-chat
+```
+
+### `bin/opener --category <id>` — เทมเพลตประโยคเปิด
+**ใช้เมื่อ:** ผู้ใช้ขอประโยคเปิดและบริบทตรงกับ category ที่มี
+**Categories:** `class_workshop`, `mutual_friend`, `dating_app`,
+`workplace_adjacent`, `online_community`, `gym_yoga_studio`
+**วิธีใช้:** ไม่ใช่ copy-paste — ใช้ template เป็นแกน แล้วช่วยผู้ใช้แทน
+`{context}` ด้วยรายละเอียดจริงของเขา เสนอตัวเลือกตาม `intent`
+
+```bash
+./bin/opener --list                       # ดู categories ทั้งหมด
+./bin/opener --category class_workshop    # ดู templates ของหมวดนั้น
+```
+
+**สำคัญ:** tools เหล่านี้เป็น *เครื่องมือเสริม* ไม่ใช่คำตัดสิน — ผู้ใช้มา
+ขอคำแนะนำจากคน (Claude) ไม่ได้มาขออ่าน JSON การประเมินจาก rules
+อาจคลาดเคลื่อน ใช้ judgement ทับได้เมื่อบริบทบอกว่าควรทำ
+
 ## ขั้นตอนการทำงาน
 
 เมื่อผู้ใช้เข้ามาด้วยเรื่องการจีบหรือการคุยกับคนที่ชอบ ให้ทำตามลำดับนี้

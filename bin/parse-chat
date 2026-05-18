@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""CLI: parse a pasted chat transcript and run signal analysis.
+
+Usage:
+    cat chat.txt | bin/parse-chat
+    bin/parse-chat --file chat.txt
+
+Format expected (one message per line):
+    Me: hi
+    Her: hey what's up
+    Me: how was the weekend
+
+Output: JSON with parsed stats + signal zone.
+"""
+import argparse
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.parser import parse_chat
+from src.signals import calculate
+from dataclasses import asdict
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(description="Parse chat and run signal analysis")
+    p.add_argument("--file", help="Path to chat transcript (default: stdin)")
+    p.add_argument("--your-name", help="Alias for yourself if non-standard")
+    p.add_argument("--their-name", help="Alias for the other person")
+    args = p.parse_args()
+
+    if args.file:
+        raw = Path(args.file).read_text(encoding="utf-8")
+    else:
+        raw = sys.stdin.read()
+
+    if not raw.strip():
+        print("error: no chat input provided", file=sys.stderr)
+        return 2
+
+    stats = parse_chat(raw, your_name=args.your_name, their_name=args.their_name)
+    signal = calculate(stats)
+
+    output = {
+        "stats": asdict(stats),
+        "signal": signal.to_dict(),
+    }
+    print(json.dumps(output, ensure_ascii=False, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,74 @@
+name: Build and Release Skill
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g. v1.0.0) — leave blank for dev build'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate SKILL.md frontmatter
+        run: |
+          python3 - <<'EOF'
+          import re, sys
+          content = open('SKILL.md').read()
+          m = re.match(r'---\n(.*?)\n---', content, re.S)
+          if not m:
+              sys.exit("ERROR: SKILL.md missing YAML frontmatter")
+          fm = m.group(1)
+          if 'name:' not in fm or 'description:' not in fm:
+              sys.exit("ERROR: frontmatter missing 'name' or 'description'")
+          print("SKILL.md frontmatter OK")
+          EOF
+
+      - name: Package .skill bundle
+        run: |
+          SKILL_NAME="long-jib-ther-doo"
+          mkdir -p "build/${SKILL_NAME}"
+          cp SKILL.md "build/${SKILL_NAME}/"
+          [ -f README.md ] && cp README.md "build/${SKILL_NAME}/" || true
+          [ -f LICENSE ]   && cp LICENSE   "build/${SKILL_NAME}/" || true
+          for dir in bin src data; do
+            [ -d "$dir" ] && cp -r "$dir" "build/${SKILL_NAME}/"
+          done
+          cd build && zip -r "../${SKILL_NAME}.skill" "${SKILL_NAME}"
+          cd .. && unzip -l "${SKILL_NAME}.skill"
+
+      - name: Upload artifact (always)
+        uses: actions/upload-artifact@v4
+        with:
+          name: long-jib-ther-doo-skill
+          path: long-jib-ther-doo.skill
+
+      - name: Create GitHub Release (on tag only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: long-jib-ther-doo.skill
+          generate_release_notes: true
+          body: |
+            ## Install
+
+            **Claude.ai:** Download `long-jib-ther-doo.skill` below → Settings → Capabilities → Skills → Upload skill
+
+            **Claude Code:**
+            ```bash
+            mkdir -p ~/.claude/skills/long-jib-ther-doo
+            curl -L -o /tmp/long-jib.skill \
+              https://github.com/${{ github.repository }}/releases/latest/download/long-jib-ther-doo.skill
+            unzip /tmp/long-jib.skill -d ~/.claude/skills/
+            ```

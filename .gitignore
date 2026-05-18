@@ -21,3 +21,9 @@ __pycache__/
 node_modules/
 .env
 .env.local
+
+# Generated per-user action plans (output of bin/gen-plan)
+plans/
+
+# LINE chat exports — never commit personal chat data
+\[LINE\]*.txt

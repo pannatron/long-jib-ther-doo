@@ -120,6 +120,26 @@ Her: ok" | ./bin/parse-chat
 ./bin/opener --category class_workshop    # ดู templates ของหมวดนั้น
 ```
 
+### `bin/gen-plan <plan.json>` — gen printable action plan (PDF/HTML)
+**ใช้เมื่อ:** หลังจบ `/jib-deep` แล้วผู้ใช้ตอบรับว่าอยากได้ PDF เก็บไว้
+(opt-in — ดูรายละเอียดใน `commands/jib-deep.md` Step 7)
+**Schema:** ตาม `templates/action-plan-example.json` — ใช้เทียบโครงสร้างได้
+**Output:** เขียน `<out-dir>/action-plan-<slug>.html` และ `.pdf` แล้ว print
+path เป็น JSON ออก stdout — ถ้า Chrome/Chromium ไม่ติดตั้ง จะข้าม PDF
+และเตือนใน stderr
+
+**สำคัญ — Claude เป็นคนเขียน JSON ทุกครั้ง:** อย่าใช้ example เป็นตัวจริง
+content ทั้งหมดต้อง mirror สิ่งที่ Claude เพิ่งพูดในแชท (ผ่าน step 5-6
+ของ /jib-deep) ภาษาในไฟล์ต้องตรงกับภาษาของ session
+
+```bash
+./bin/gen-plan plans/<slug>.json --out-dir plans --open
+# หรือผ่าน stdin:
+echo "$json" | ./bin/gen-plan - --out my-plan
+# ถ้าไม่อยากได้ PDF:
+./bin/gen-plan plan.json --no-pdf
+```
+
 **สำคัญ:** tools เหล่านี้เป็น *เครื่องมือเสริม* ไม่ใช่คำตัดสิน — ผู้ใช้มา
 ขอคำแนะนำจากคน (Claude) ไม่ได้มาขออ่าน JSON การประเมินจาก rules
 อาจคลาดเคลื่อน ใช้ judgement ทับได้เมื่อบริบทบอกว่าควรทำ

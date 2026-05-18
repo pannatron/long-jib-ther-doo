@@ -82,6 +82,55 @@ class TestLineParser(unittest.TestCase):
         stats = parse_line_export(chat)
         self.assertGreaterEqual(stats.consecutive_short_replies, 3)
 
+    def test_thai_be_date_format(self):
+        chat = """Tue, 27/01/2569 BE
+10:00\tสงกรานต์\tหวัดดี
+10:05\tคุณแพร\tไง
+
+Fri, 30/01/2569 BE
+12:00\tสงกรานต์\tไปกินข้าวไหม
+12:30\tคุณแพร\tไม่ว่าง
+"""
+        stats = parse_line_export(chat, your_name="สงกรานต์")
+        self.assertEqual(stats.your_msgs, 2)
+        self.assertEqual(stats.their_msgs, 2)
+
+    def test_thai_be_reply_time_computed(self):
+        chat = """Tue, 27/01/2569 BE
+10:00\tสงกรานต์\tเป็นไงบ้าง
+10:30\tคุณแพร\tสบายดี
+"""
+        stats = parse_line_export(chat, your_name="สงกรานต์")
+        self.assertEqual(stats.their_avg_reply_minutes, 30.0)
+
+    def test_session_initiation_counting(self):
+        chat = """2024/05/10 (Fri)
+10:00\tMe\tหวัดดี
+10:05\tNong\tไง
+10:10\tMe\tเป็นไงบ้าง
+10:15\tNong\tดี
+
+2024/05/11 (Sat)
+20:00\tNong\tไปไหนกันมา
+20:05\tMe\tบ้านเฉยๆ
+
+2024/05/15 (Wed)
+09:00\tNong\tอีกครั้ง
+"""
+        stats = parse_line_export(chat)
+        self.assertGreaterEqual(stats.their_initiations, 2)
+
+    def test_long_gap_excluded_from_reply_avg(self):
+        chat = """2024/05/10 (Fri)
+10:00\tMe\thi
+10:05\tNong\they
+
+2024/05/12 (Sun)
+10:00\tNong\tlate reply
+"""
+        stats = parse_line_export(chat)
+        self.assertLess(stats.their_avg_reply_minutes, 60)
+
 
 if __name__ == "__main__":
     unittest.main()

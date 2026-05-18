@@ -1,0 +1,314 @@
+#!/usr/bin/env python3
+"""
+gen-plan — generate a personalized action-plan PDF from JSON.
+
+Usage:
+  ./bin/gen-plan path/to/plan.json [--out NAME] [--no-pdf] [--open]
+  cat plan.json | ./bin/gen-plan - [--out NAME]
+
+JSON schema: see templates/action-plan-example.json
+"""
+
+import argparse
+import html
+import json
+import os
+import shlex
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+TEMPLATE_PATH = ROOT / "templates" / "action-plan.html"
+
+
+def esc(s):
+    if s is None:
+        return ""
+    return html.escape(str(s), quote=False)
+
+
+def render_inline(s):
+    """Light markdown-ish inline rendering: **bold**, *italic*, \\n / <br> → <br>."""
+    if s is None:
+        return ""
+    s = esc(s)
+    import re
+    s = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", s)
+    s = re.sub(r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", r"<i>\1</i>", s)
+    s = re.sub(r"&lt;br\s*/?&gt;", "<br>", s)
+    s = s.replace("\n", "<br>")
+    return s
+
+
+def render_meta(meta):
+    parts = []
+    for item in meta or []:
+        label = esc(item.get("label", ""))
+        value = render_inline(item.get("value", ""))
+        parts.append(f"<strong>{label}:</strong> {value}")
+    return "<br>\n".join(parts)
+
+
+def render_dimensions(columns, dimensions):
+    if not dimensions:
+        return ""
+    cols = columns or ["Dimension", "Status", "Grade"]
+    head = "".join(f"<th>{esc(c)}</th>" for c in cols)
+    rows = []
+    for d in dimensions:
+        grade = d.get("grade", "yellow")
+        grade_label = d.get("grade_label") or d.get("grade", "")
+        rows.append(
+            "<tr>"
+            f"<td><b>{render_inline(d.get('name', ''))}</b></td>"
+            f"<td>{render_inline(d.get('status', ''))}</td>"
+            f'<td class="grade-{esc(grade)}">{render_inline(grade_label)}</td>'
+            "</tr>"
+        )
+    return (
+        "<table>\n"
+        f"<thead><tr>{head}</tr></thead>\n"
+        f"<tbody>\n{chr(10).join(rows)}\n</tbody>\n"
+        "</table>"
+    )
+
+
+def render_summary_box(text):
+    if not text:
+        return ""
+    return f'<div class="summary-box">{render_inline(text)}</div>'
+
+
+def _list_html(items):
+    return "<ul>\n" + "\n".join(f"<li>{render_inline(i)}</li>" for i in items) + "\n</ul>"
+
+
+def render_block(block, labels):
+    btype = block.get("type")
+    if btype == "dos":
+        label = labels.get("do_label", "✅ DO")
+        return f'<div class="do-list"><strong>{esc(label)}</strong>\n{_list_html(block.get("items", []))}\n</div>'
+    if btype == "donts":
+        label = labels.get("dont_label", "❌ DON'T")
+        return f'<div class="dont-list"><strong>{esc(label)}</strong>\n{_list_html(block.get("items", []))}\n</div>'
+    if btype == "scripts":
+        out = ["<p><b>" + esc(block.get("heading", "")) + "</b></p>"] if block.get("heading") else []
+        for item in block.get("items", []):
+            label = item.get("label", "")
+            text = item.get("text", "")
+            label_html = f'<div class="script-label">💬 {render_inline(label)}</div>' if label else ""
+            out.append(f'<div class="script">{label_html}<div class="script-text">{render_inline(text)}</div></div>')
+        return "\n".join(out)
+    if btype == "table":
+        header = block.get("header") or []
+        rows = block.get("rows") or []
+        head = "".join(f"<th>{esc(c)}</th>" for c in header)
+        body = []
+        for r in rows:
+            cells = "".join(f"<td>{render_inline(c)}</td>" for c in r)
+            body.append(f"<tr>{cells}</tr>")
+        return f"<table><thead><tr>{head}</tr></thead><tbody>{''.join(body)}</tbody></table>"
+    if btype == "text":
+        return f"<p>{render_inline(block.get('text', ''))}</p>"
+    if btype == "list":
+        items = block.get("items", [])
+        heading = block.get("heading")
+        prefix = f"<p><b>{render_inline(heading)}</b></p>" if heading else ""
+        return prefix + _list_html(items)
+    return ""
+
+
+def render_stages(stages, labels):
+    if not stages:
+        return ""
+    out = []
+    for s in stages:
+        timeframe = render_inline(s.get("timeframe", ""))
+        goal = s.get("goal", "")
+        goal_html = ""
+        if goal:
+            goal_label = labels.get("goal_label", "เป้า / Goal")
+            goal_html = f'<div class="stage-goal"><b>{esc(goal_label)}:</b> {render_inline(goal)}</div>'
+        blocks_html = "\n".join(render_block(b, labels) for b in s.get("blocks", []))
+        out.append(
+            '<div class="stage">'
+            f'<div class="stage-title">{timeframe}</div>'
+            f"{goal_html}"
+            f"{blocks_html}"
+            "</div>"
+        )
+    return "\n".join(out)
+
+
+def render_scenarios(scenarios):
+    if not scenarios:
+        return ""
+    out = []
+    for s in scenarios:
+        label = s.get("label", "")
+        trigger = s.get("trigger", "")
+        response = s.get("response", "")
+        out.append(
+            '<div class="scenario">'
+            f"<b>Scenario {esc(label)}:</b> {render_inline(trigger)}<br>"
+            f"→ {render_inline(response)}"
+            "</div>"
+        )
+    return "\n".join(out)
+
+
+def render_quickref(do_list, dont_list, labels):
+    out = []
+    if do_list:
+        label = labels.get("do_label", "✅ DO")
+        out.append(f'<div class="do-list"><strong>{esc(label)}</strong>\n{_list_html(do_list)}\n</div>')
+    if dont_list:
+        label = labels.get("dont_label", "❌ DON'T")
+        out.append(f'<div class="dont-list"><strong>{esc(label)}</strong>\n{_list_html(dont_list)}\n</div>')
+    return "\n".join(out)
+
+
+def render_warnings(warnings):
+    if not warnings:
+        return ""
+    out = []
+    for w in warnings:
+        title = w.get("title", "")
+        body = w.get("body", "")
+        title_html = f"<b>{render_inline(title)}</b><br>" if title else ""
+        out.append(f'<div class="warning">{title_html}{render_inline(body)}</div>')
+    return "\n".join(out)
+
+
+def render_pull_quote(text):
+    if not text:
+        return ""
+    return f'<div class="pull-quote">{render_inline(text)}</div>'
+
+
+def render_footer(footer):
+    if not footer:
+        return ""
+    if isinstance(footer, list):
+        return "<br>".join(render_inline(line) for line in footer)
+    return render_inline(footer)
+
+
+def build_html(data):
+    template = TEMPLATE_PATH.read_text(encoding="utf-8")
+    labels = data.get("labels") or {}
+
+    replacements = {
+        "{{LANG}}": esc(data.get("lang", "th")),
+        "{{TITLE}}": render_inline(data.get("title", "Action Plan")),
+        "{{SUBTITLE}}": render_inline(data.get("subtitle", "")),
+        "{{META_HTML}}": render_meta(data.get("meta")),
+        "{{OVERVIEW_HEADING}}": render_inline(data.get("overview_heading", "")),
+        "{{DIMENSIONS_TABLE}}": render_dimensions(
+            data.get("dimensions_columns"), data.get("dimensions")
+        ),
+        "{{SUMMARY_BOX}}": render_summary_box(data.get("summary_text")),
+        "{{ACTION_HEADING}}": render_inline(data.get("action_heading", "")),
+        "{{STAGES_HTML}}": render_stages(data.get("stages"), labels),
+        "{{BACKUP_HEADING}}": render_inline(data.get("backup_heading", "")),
+        "{{SCENARIOS_HTML}}": render_scenarios(data.get("scenarios")),
+        "{{QUICKREF_HEADING}}": render_inline(data.get("quickref_heading", "")),
+        "{{QUICKREF_HTML}}": render_quickref(
+            data.get("do_list"), data.get("dont_list"), labels
+        ),
+        "{{WARNINGS_HEADING}}": render_inline(data.get("warnings_heading", "")),
+        "{{WARNINGS_HTML}}": render_warnings(data.get("warnings")),
+        "{{PULL_QUOTE_HTML}}": render_pull_quote(data.get("pull_quote")),
+        "{{FOOTER_HTML}}": render_footer(data.get("footer")),
+    }
+    out = template
+    for key, value in replacements.items():
+        out = out.replace(key, value)
+    return out
+
+
+def html_to_pdf(html_path: Path, pdf_path: Path) -> bool:
+    """Try to convert HTML to PDF using Chrome headless. Returns True on success."""
+    candidates = [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        shutil.which("google-chrome"),
+        shutil.which("chromium"),
+        shutil.which("chromium-browser"),
+    ]
+    chrome = next((c for c in candidates if c and Path(c).exists()), None)
+    if not chrome:
+        sys.stderr.write(
+            "warning: Chrome/Chromium not found — skipping PDF.\n"
+            "         install Chrome or pass --no-pdf to suppress this message.\n"
+        )
+        return False
+
+    cmd = [
+        chrome,
+        "--headless",
+        "--disable-gpu",
+        "--no-pdf-header-footer",
+        f"--print-to-pdf={pdf_path}",
+        f"file://{html_path.resolve()}",
+    ]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    except subprocess.TimeoutExpired:
+        sys.stderr.write("error: Chrome timed out generating PDF\n")
+        return False
+
+    if pdf_path.exists() and pdf_path.stat().st_size > 0:
+        return True
+    sys.stderr.write(f"error: Chrome did not produce a PDF\n{result.stderr}\n")
+    return False
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Generate an action-plan PDF from JSON.")
+    parser.add_argument("json_path", help="Path to JSON file ('-' for stdin)")
+    parser.add_argument("--out", default=None, help="Output base name (default: action-plan-<title>)")
+    parser.add_argument("--out-dir", default=".", help="Output directory (default: cwd)")
+    parser.add_argument("--no-pdf", action="store_true", help="Skip PDF, only write HTML")
+    parser.add_argument("--open", action="store_true", help="Open the resulting file after generation")
+    args = parser.parse_args()
+
+    if args.json_path == "-":
+        data = json.load(sys.stdin)
+    else:
+        with open(args.json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+    if args.out:
+        base = args.out
+    else:
+        slug = data.get("slug") or data.get("title") or "action-plan"
+        base = "action-plan-" + "".join(
+            c if c.isalnum() or c in "-_." else "-" for c in str(slug).strip().lower()
+        )
+
+    out_dir = Path(args.out_dir).resolve()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    html_path = out_dir / f"{base}.html"
+    pdf_path = out_dir / f"{base}.pdf"
+
+    html_text = build_html(data)
+    html_path.write_text(html_text, encoding="utf-8")
+
+    result = {"html": str(html_path)}
+    if not args.no_pdf:
+        if html_to_pdf(html_path, pdf_path):
+            result["pdf"] = str(pdf_path)
+
+    print(json.dumps(result, ensure_ascii=False))
+
+    if args.open:
+        target = result.get("pdf") or result.get("html")
+        if target:
+            subprocess.run(["open", target])
+
+
+if __name__ == "__main__":
+    main()

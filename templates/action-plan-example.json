@@ -1,0 +1,152 @@
+{
+  "_comment": "Example schema for bin/gen-plan. Replace all content with the actual analysis from the /jib-deep session. Use the session language for all visible text. This example is illustrative only — names, durations, and situations should reflect the real case.",
+
+  "lang": "th",
+  "slug": "example",
+  "title": "คู่มือ Step ต่อไป: [ชื่อ/เริ่มต้น]",
+  "subtitle": "/jib-deep · multi-dimensional read & action plan",
+
+  "meta": [
+    {"label": "สถานะ", "value": "[เช่น: comfortable undefined zone — proximity สูง, escalation = 0]"},
+    {"label": "ระยะเวลาคุย", "value": "[เช่น: ~3 เดือน]"},
+    {"label": "Bottleneck", "value": "[ปัญหาแกนจริงที่อ่านได้จากข้อมูล]"}
+  ],
+
+  "overview_heading": "📊 ภาพรวมการอ่าน 5 มิติ",
+  "dimensions_columns": ["มิติ", "สถานะ", "เกรด"],
+  "dimensions": [
+    {
+      "name": "Investment balance",
+      "status": "[ใครเทเยอะกว่า, อัตราส่วนข้อความ/คำถาม]",
+      "grade": "red",
+      "grade_label": "🔴 ไม่สมดุล"
+    },
+    {
+      "name": "Engagement quality",
+      "status": "[ความลึก/ความสด ของบทสนทนา]",
+      "grade": "yellow",
+      "grade_label": "🟡 ทรงตัว"
+    },
+    {
+      "name": "Momentum",
+      "status": "[ขาขึ้น/ทรงตัว/ขาลง เทียบกับช่วงเริ่ม]",
+      "grade": "yellow",
+      "grade_label": "🟡 ขาลง"
+    },
+    {
+      "name": "Action signals",
+      "status": "[✅ สัญญาณบวก / 🚩 สัญญาณลบ ผสมกัน]",
+      "grade": "yellow",
+      "grade_label": "🟡 ผสม"
+    },
+    {
+      "name": "Trajectory ถ้าไม่ทำอะไร",
+      "status": "[คาดการณ์เส้นทางถ้าไม่เปลี่ยน]",
+      "grade": "red",
+      "grade_label": "🔴 ต้องเปลี่ยน"
+    }
+  ],
+
+  "summary_text": "**สรุปจริงๆ:** [ภาพรวมหลังข้ามมิติ — มักเป็น 1-2 ประโยคที่บอกว่า bottleneck จริงคืออะไร]",
+
+  "labels": {
+    "goal_label": "เป้า",
+    "do_label": "✅ ทำ",
+    "dont_label": "❌ ห้าม"
+  },
+
+  "action_heading": "🎯 Action Plan",
+  "stages": [
+    {
+      "timeframe": "⏱ ระยะ 1: ภายใน 24 ชั่วโมง — [โทนของระยะนี้]",
+      "goal": "[เป้าหมายของระยะนี้ — 1 ประโยค]",
+      "blocks": [
+        {
+          "type": "dos",
+          "items": [
+            "[สิ่งที่ควรทำข้อ 1]",
+            "[สิ่งที่ควรทำข้อ 2]",
+            "[สิ่งที่ควรทำข้อ 3]"
+          ]
+        },
+        {
+          "type": "donts",
+          "items": [
+            "[ห้ามทำข้อ 1 — พร้อมเหตุผลสั้นๆ]",
+            "[ห้ามทำข้อ 2]",
+            "[ห้ามทำข้อ 3]"
+          ]
+        }
+      ]
+    },
+    {
+      "timeframe": "⏱ ระยะ 2: ภายใน 72 ชั่วโมง — [action หลัก]",
+      "goal": null,
+      "blocks": [
+        {
+          "type": "scripts",
+          "heading": "สคริปต์ชวน (เลือก 1 แล้วปรับ)",
+          "items": [
+            {"label": "แบบ A — [แนวทาง]:", "text": "[ข้อความตัวอย่างที่ผู้ใช้ส่งได้จริง]"},
+            {"label": "แบบ B — [แนวทาง]:", "text": "[ข้อความตัวอย่างที่ผู้ใช้ส่งได้จริง]"}
+          ]
+        },
+        {
+          "type": "list",
+          "heading": "กฎ:",
+          "items": [
+            "[กฎการใช้สคริปต์ข้อ 1]",
+            "[กฎการใช้สคริปต์ข้อ 2]"
+          ]
+        }
+      ]
+    },
+    {
+      "timeframe": "⏱ ระยะ 3: หลังลงมือ — อ่าน signal",
+      "goal": "[เป้าหมายระยะนี้]",
+      "blocks": [
+        {
+          "type": "table",
+          "header": ["การตอบสนอง", "แปลว่า", "step ต่อไป"],
+          "rows": [
+            ["[แบบ A]", "[ความหมาย]", "[ทำต่อยังไง]"],
+            ["[แบบ B]", "[ความหมาย]", "[ทำต่อยังไง]"]
+          ]
+        }
+      ]
+    }
+  ],
+
+  "backup_heading": "🔀 Backup Plan",
+  "scenarios": [
+    {"label": "A", "trigger": "[ถ้าผลตอบรับ = บวกชัด]", "response": "[ทำอะไรต่อ]"},
+    {"label": "B", "trigger": "[ถ้าผลตอบรับ = กลางๆ]", "response": "[ทำอะไรต่อ]"},
+    {"label": "C", "trigger": "[ถ้าผลตอบรับ = หลีกเลี่ยง]", "response": "[ทำอะไรต่อ]"},
+    {"label": "D", "trigger": "[ถ้าผลตอบรับ = ลบชัด]", "response": "[ทำอะไรต่อ — มักคือปรับ expectation]"}
+  ],
+
+  "quickref_heading": "⚡ Do / Don't Quick Reference",
+  "do_list": [
+    "[หลักการทำที่สำคัญที่สุด 1]",
+    "[หลักการทำที่สำคัญที่สุด 2]",
+    "[หลักการทำที่สำคัญที่สุด 3]"
+  ],
+  "dont_list": [
+    "[ห้ามทำที่สำคัญที่สุด 1]",
+    "[ห้ามทำที่สำคัญที่สุด 2]",
+    "[ห้ามทำที่สำคัญที่สุด 3]"
+  ],
+
+  "warnings_heading": "⚠️ คำเตือนสำคัญ",
+  "warnings": [
+    {"title": "[หัวข้อเตือน 1]", "body": "[คำอธิบาย]"},
+    {"title": "[หัวข้อเตือน 2]", "body": "[คำอธิบาย]"}
+  ],
+
+  "pull_quote": "[ประโยคปิด — มักย้ำว่าเป้าจริงๆ ของแผนนี้คืออะไร]",
+
+  "footer": [
+    "สร้างจาก /jib-deep analysis",
+    "long-jib-ther-doo · multi-dimensional relationship read"
+  ]
+}
